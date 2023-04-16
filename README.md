@@ -1,2 +1,2 @@
 # nestjs-typeorm-example
-A typeorm us3 case for connecting multiple databases
+A typeorm use case for connecting multiple databases
