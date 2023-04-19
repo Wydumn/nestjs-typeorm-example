@@ -10,6 +10,12 @@ export class CustomerController {
     return await this.customerService.getAll();
   }
 
+  // /vip route should be above the /:id route for params access reason
+  @Get('/where')
+  async findWithWhereClause() {
+    return await this.customerService.getWhereQuery();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return await this.customerService.getCustomerById(id);

@@ -12,4 +12,8 @@ export class CustomerService {
   async getCustomerById(id: number) {
     return await this.customerRepository.findCustomerById(id);
   }
+
+  async getWhereQuery() {
+    return await this.customerRepository.getWhereQuery();
+  }
 }
