@@ -1,20 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Customers } from 'src/entities/Customers.entity';
-import {
-  And,
-  Between,
-  DataSource,
-  In,
-  IsNull,
-  LessThan,
-  Like,
-  MoreThan,
-  MoreThanOrEqual,
-  Not,
-  Raw,
-  Repository,
-} from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CustomersRepository extends Repository<Customers> {
