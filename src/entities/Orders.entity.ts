@@ -38,7 +38,10 @@ export class Orders {
   @Column('smallint', { name: 'shipper_id', nullable: true })
   shipperId: number | null;
 
-  @OneToMany(() => OrderItems, (orderItems) => orderItems.order)
+  @OneToMany(() => OrderItems, (orderItems) => orderItems.order, {
+    cascade: ['insert'],
+    onDelete: 'NO ACTION',
+  })
   orderItems: OrderItems[];
 
   @ManyToOne(() => Customers, (customers) => customers.orders, {

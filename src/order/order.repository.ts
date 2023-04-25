@@ -15,26 +15,4 @@ export class OrdersRepository extends Repository<Orders> {
       ordersRepository.queryRunner,
     );
   }
-
-  getJoinQuery() {
-    /**
-     * SELECT orderId, orders.customerId, firstName, lastName
-     * FROM orders
-     * JOIN customers
-     * ON orders.customerId = customers.customerId
-     */
-    return this.find({
-      relations: {
-        customer: true,
-      },
-      select: {
-        orderId: true,
-        customerId: true,
-        customer: {
-          firstName: true,
-          lastName: true,
-        },
-      },
-    });
-  }
 }

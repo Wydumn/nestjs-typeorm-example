@@ -16,35 +16,4 @@ export class OrderItemsRepository extends Repository<OrderItems> {
       orderItemsRepository.queryRunner,
     );
   }
-
-  getJoinQuery() {
-    /**
-     * SELECT *
-     * FROM order_items oi
-     * JOIN inventory.products p
-     * ON oi.productId = p.productId
-     */
-    return this.find({
-      relations: {
-        product: true,
-      },
-    });
-  }
-
-  /**
-   * SELECT *
-   * FROM order_items oi
-   * JOIN order_item_notes oin
-   * ON oi.order_id = oin.order_id
-   *  AND oi.product_id = oin.product_id
-   */
-  getCompoundJoinCondQuery() {
-    return this.createQueryBuilder('oi')
-      .leftJoinAndSelect(
-        OrderItemNotes,
-        'oin',
-        'oi.orderId = oin.orderId AND oi.productId = oin.productId',
-      )
-      .getMany();
-  }
 }

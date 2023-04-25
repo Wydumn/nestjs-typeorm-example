@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { CustomerService } from './customer.service';
+import { CreateCustomerDTO } from './dto/create-customer.dto';
 
 @Controller('customer')
 export class CustomerController {
@@ -8,6 +9,11 @@ export class CustomerController {
   @Get()
   async findAll() {
     return await this.customerService.getAll();
+  }
+
+  @Get('/union')
+  async findWithUnion() {
+    return await this.customerService.getUnionQuery();
   }
 
   /**
@@ -22,5 +28,10 @@ export class CustomerController {
   @Get(':id')
   async findOne(@Param('id') id: number) {
     return await this.customerService.getCustomerById(id);
+  }
+
+  @Post()
+  async createOne(@Body() createCustomerDTOs: CreateCustomerDTO[]) {
+    return await this.customerService.createCustomer(createCustomerDTOs);
   }
 }
