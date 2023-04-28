@@ -11,6 +11,11 @@ export class CustomerController {
     return await this.customerService.getAll();
   }
 
+  @Get('/having')
+  async queryWithHaving() {
+    return await this.customerService.queryWithHaving();
+  }
+
   @Get('/union')
   async findWithUnion() {
     return await this.customerService.getUnionQuery();

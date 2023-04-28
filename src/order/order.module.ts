@@ -14,13 +14,22 @@ import { PaymentMethods } from 'src/entities/PaymentMethods.entity';
 import { Clients } from 'src/entities/Clients.entity';
 import { PaymentsRepository } from './payments.repository';
 import { OrderItemNotes } from 'src/entities/OrderItemNotes.entity';
+import { productRepository } from './product.repository';
+import { Invoices } from 'src/entities/Invoices.entity';
+import { InvoicesRepository } from './invoices.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Orders, OrderItems, OrderItemNotes], 'store'),
+    TypeOrmModule.forFeature(
+      [Orders, OrderItems, OrderItemNotes, Products],
+      'store',
+    ),
     TypeOrmModule.forFeature([Products], 'inventory'),
     TypeOrmModule.forFeature([Employees], 'hr'),
-    TypeOrmModule.forFeature([Payments, PaymentMethods, Clients], 'invoicing'),
+    TypeOrmModule.forFeature(
+      [Payments, PaymentMethods, Clients, Invoices],
+      'invoicing',
+    ),
   ],
   controllers: [OrderController],
   providers: [
@@ -29,6 +38,8 @@ import { OrderItemNotes } from 'src/entities/OrderItemNotes.entity';
     OrderItemsRepository,
     EmployeeRepository,
     PaymentsRepository,
+    productRepository,
+    InvoicesRepository,
   ],
 })
 export class OrderModule {}

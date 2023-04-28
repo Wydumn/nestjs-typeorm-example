@@ -7,6 +7,11 @@ import { CreateOrderDto, CreateOrderItemDto } from './dto/create-order.dto';
 import { Employees } from 'src/entities/Employees.entity';
 import { OrderItemNotes } from 'src/entities/OrderItemNotes.entity';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
+import { PaymentMethods } from 'src/entities/PaymentMethods.entity';
+import { productRepository } from './product.repository';
+import { OrderItems } from 'src/entities/OrderItems.entity';
+import { InvoicesRepository } from './invoices.repository';
+import { Invoices } from 'src/entities/Invoices.entity';
 
 @Injectable()
 export class OrderService {
@@ -15,6 +20,8 @@ export class OrderService {
     private orderItemsRepository: OrderItemsRepository,
     private employeeRepository: EmployeeRepository,
     private paymentsRepository: PaymentsRepository,
+    private productsRepository: productRepository,
+    private invoicesRepository: InvoicesRepository,
   ) {}
 
   async getJoinQuery() {
@@ -148,5 +155,162 @@ export class OrderService {
     if (!deleteRes.affected) {
       throw new HttpException('OrderItem not found', HttpStatus.NOT_FOUND);
     }
+  }
+
+  async queryWithGroupBy() {
+    return this.paymentsRepository
+      .createQueryBuilder('p')
+      .innerJoinAndSelect(
+        PaymentMethods,
+        'pm',
+        'p.paymentMethod2 = pm.paymentMethodId',
+      )
+      .select([
+        'date',
+        'pm.name as payment_method',
+        'SUM(amount) as total_payments',
+      ])
+      .groupBy('date')
+      .addGroupBy('payment_method')
+      .orderBy('date')
+      .getRawMany();
+  }
+
+  /**
+   * WHERE subquery
+   * SELECT *
+   * FROM employees
+   * WHERE salary > (
+   *  SELECT AVG(salary)
+   *  FROM employees
+   * )
+   */
+  async queryEmplAboveAvg() {
+    return await this.employeeRepository
+      .createQueryBuilder('e')
+      .select()
+      .where((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select('AVG(salary)')
+          .from(Employees, 'em')
+          .getQuery();
+        return 'salary > ' + subQuery;
+      })
+      .getMany();
+  }
+
+  /**
+   * SELECT *
+   * FROM products
+   * WHERE productId NOT IN (
+   *  SELECT DISTINCT productId
+   *  FROM orderItems
+   * )
+   */
+  async findUnorderedProd() {
+    return await this.productsRepository
+      .createQueryBuilder('p')
+      .select()
+      .where(
+        (qb) =>
+          `p.productId NOT IN ${qb
+            .subQuery()
+            .select('DISTINCT oi.productId')
+            .from(OrderItems, 'oi')
+            .getQuery()}`,
+      )
+      .getMany();
+  }
+
+  /**
+   * SELECT *
+   * FROM products p
+   * WHERE NOT EXISTS (
+   *  SELECT productId
+   *  FROM orderItems
+   *  WHERE productId = p.productId
+   * )
+   */
+  async findUnorderedProdWithExists() {
+    return await this.productsRepository
+      .createQueryBuilder('p')
+      .select()
+      .where(
+        (qb) =>
+          `NOT EXISTS (${qb
+            .createQueryBuilder()
+            .select('oi.productId')
+            .from(OrderItems, 'oi')
+            .where('oi.productId = p.productId')
+            .getQuery()})`,
+      )
+      .getMany();
+  }
+
+  /**
+   * SELECT
+   *    invoiceId, invoiceTotal,
+   *    (SELECT AVG(invoiceTotal) FROM invoices) AS invoiceAverage,
+   *    invoiceTotal - (SELECT invoiceAverage) AS difference
+   * FROM invoices
+   */
+  async queryWithSelectSubquery() {
+    return await this.invoicesRepository.query(`
+      SELECT
+        invoice_id, invoice_total,
+          (SELECT AVG(invoice_total) FROM invoices) AS invoiceAverage,
+          invoice_total - (SELECT invoiceAverage) AS difference
+      FROM invoices`);
+  }
+
+  /**
+   * SELECT *
+   * FROM invoices
+   * WHERE invoice_total > ALL (
+   *  SELECT invoice_total
+   *  FROM invoices
+   *  WHERE client_id = 3
+   * )
+   */
+  async queryWithALL() {
+    return await this.invoicesRepository
+      .createQueryBuilder('invoice')
+      .select()
+      .where(
+        (qb) =>
+          `invoice_total > ALL(${qb
+            .subQuery()
+            .select('i.invoiceTotal')
+            .from(Invoices, 'i')
+            .where('i.clientId = :clientId', { clientId: 3 })
+            .getQuery()})`,
+      )
+      .getMany();
+  }
+
+  /**
+   * SELECT *
+   * FROM invoices i
+   * WHERE invoiceTotal > (
+   *  SELECT AVG(invoiceTotal)
+   *  FROM invoices
+   *  WHERE clientId = i.clientId
+   * )
+   */
+  async correlatedSubQuery() {
+    return await this.invoicesRepository
+      .createQueryBuilder('i')
+      .select()
+      .where(
+        (qb) =>
+          `i.invoiceTotal > ${qb
+            .subQuery()
+            .select('AVG(in.invoiceTotal)')
+            .from(Invoices, 'in')
+            .where('in.clientId = i.clientId')
+            .getQuery()}`,
+      )
+      .getMany();
   }
 }

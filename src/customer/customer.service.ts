@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CustomersRepository } from './customer.repository';
 import { CreateCustomerDTO } from './dto/create-customer.dto';
+import { Orders } from 'src/entities/Orders.entity';
+import { OrderItems } from 'src/entities/OrderItems.entity';
 
 @Injectable()
 export class CustomerService {
@@ -115,5 +117,36 @@ export class CustomerService {
     );
 
     return await this.customerRepository.save(newCustomers);
+  }
+
+  /**
+   * SELECT
+   *  c.customerId, c.firstName, c.lastName, SUM(oi.quantity * oi.unitPrice) AS total_sales
+   * FROM customers c
+   * JOIN orders o USING (customerId)
+   * JOIN orderItems oi USING (orderID)
+   * WHERE state = 'VA'
+   * GROUP BY
+   *  c.customerId, c.firstName, c.lastName
+   * HAVING total_sales > 100
+   */
+  async queryWithHaving() {
+    return this.customerRepository
+      .createQueryBuilder('c')
+      .innerJoinAndSelect(Orders, 'o', 'o.customerId = c.customerId')
+      .innerJoinAndSelect(OrderItems, 'oi', 'o.orderId = oi.orderId')
+      .select([
+        'c.customerId',
+        'c.firstName',
+        'c.lastName',
+        'SUM(oi.quantity * oi.unitPrice) as total_sales',
+      ])
+      .where('state = :state', { state: 'VA' })
+      .groupBy('c.customerId')
+      .addGroupBy('c.firstName')
+      .addGroupBy('c.lastName')
+      .having('total_sales > 100')
+      .printSql()
+      .getRawMany();
   }
 }

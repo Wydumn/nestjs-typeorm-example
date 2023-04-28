@@ -15,8 +15,4 @@ export class OrdersRepository extends Repository<OrderItemNotes> {
       orderItemNotesRepository.queryRunner,
     );
   }
-
-  getJoinQuery() {
-    // return this.createQueryBuilder('oi').leftJoinAndSelect()
-  }
 }
